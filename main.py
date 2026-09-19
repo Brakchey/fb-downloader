@@ -11,7 +11,6 @@ import threading
 import os
 import yt_dlp
 
-# កំណត់ពណ៌ផ្ទៃខាងក្រោយ Dark Mode ទំនើប (#111827)
 Window.clearcolor = (0.07, 0.09, 0.15, 1)
 
 class RoundedButton(Button):
@@ -20,7 +19,7 @@ class RoundedButton(Button):
         self.background_color = (0, 0, 0, 0)
         self.background_normal = ''
         with self.canvas.before:
-            Color(0.15, 0.45, 0.95, 1)  # ពណ៌ខៀវ Royal Blue ភ្លឺស្អាត
+            Color(0.15, 0.45, 0.95, 1)
             self.rect = RoundedRectangle(pos=self.pos, size=self.size, radius=)
         self.bind(pos=self.update_rect, size=self.update_rect)
 
@@ -34,7 +33,6 @@ class DownloaderApp(App):
         
         root = BoxLayout(orientation='vertical', padding=, spacing=15)
         
-        # ចំណងជើងធំ
         title = Label(
             text="Video Saver",
             font_size='26sp',
@@ -45,7 +43,6 @@ class DownloaderApp(App):
         )
         root.add_widget(title)
         
-        # ចំណងជើងរង
         subtitle = Label(
             text="Fast & HD Video Downloader",
             font_size='14sp',
@@ -57,9 +54,8 @@ class DownloaderApp(App):
         
         root.add_widget(Widget(size_hint_y=None, height='25dp'))
         
-        # ប្រអប់បញ្ចូល Link រចនាយ៉ាងស្អាត
         self.url_input = TextInput(
-            hint_text="Paste Facebook video link here...",
+            hint_text="Paste video link here...",
             multiline=False,
             size_hint_y=None,
             height='55dp',
@@ -73,7 +69,6 @@ class DownloaderApp(App):
         
         root.add_widget(Widget(size_hint_y=None, height='10dp'))
         
-        # ប៊ូតុង DOWNLOAD NOW កោងមូល
         self.btn_download = RoundedButton(
             text="DOWNLOAD NOW",
             font_size='16sp',
@@ -87,7 +82,6 @@ class DownloaderApp(App):
         
         root.add_widget(Widget(size_hint_y=None, height='20dp'))
         
-        # អក្សរបង្ហាញស្ថានភាព
         self.status_label = Label(
             text="Ready to download",
             font_size='15sp',
@@ -130,7 +124,7 @@ class DownloaderApp(App):
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
-            os.system(f'am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d "file://{download_dir}" > /dev/null 2>&1')
+            os.system(f"am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d 'file://{download_dir}' > /dev/null 2>&1")
             Clock.schedule_once(lambda dt: self._update_status("Download Complete! Check Gallery.", True, (0.3, 0.9, 0.4, 1)))
         except Exception as e:
             Clock.schedule_once(lambda dt: self._update_status("Download Failed! Try another link.", True, (1, 0.3, 0.3, 1)))
