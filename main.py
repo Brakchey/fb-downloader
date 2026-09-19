@@ -3,6 +3,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.graphics import Color, RoundedRectangle
@@ -33,6 +34,7 @@ class DownloaderApp(App):
         
         root = BoxLayout(orientation='vertical', padding=, spacing=15)
         
+        # Title
         title = Label(
             text="Video Saver",
             font_size='26sp',
@@ -52,8 +54,9 @@ class DownloaderApp(App):
         )
         root.add_widget(subtitle)
         
-        root.add_widget(Widget(size_hint_y=None, height='25dp'))
+        root.add_widget(Widget(size_hint_y=None, height='15dp'))
         
+        # URL Input
         self.url_input = TextInput(
             hint_text="Paste video link here...",
             multiline=False,
@@ -69,6 +72,7 @@ class DownloaderApp(App):
         
         root.add_widget(Widget(size_hint_y=None, height='10dp'))
         
+        # Download Button
         self.btn_download = RoundedButton(
             text="DOWNLOAD NOW",
             font_size='16sp',
@@ -80,14 +84,35 @@ class DownloaderApp(App):
         self.btn_download.bind(on_press=self.start_download)
         root.add_widget(self.btn_download)
         
-        root.add_widget(Widget(size_hint_y=None, height='20dp'))
+        root.add_widget(Widget(size_hint_y=None, height='15dp'))
         
-        self.status_label = Label(
-            text="Ready to download",
-            font_size='15sp',
-            color=(0.4, 0.85, 0.5, 1),
+        # លេខភាគរយរត់ (0% ដល់ 100%)
+        self.percent_label = Label(
+            text="0%",
+            font_size='22sp',
+            bold=True,
+            color=(0.3, 0.7, 1, 1),
             size_hint_y=None,
             height='35dp'
+        )
+        root.add_widget(self.percent_label)
+        
+        # របារ Progress Bar រត់តាមភាគរយ
+        self.progress_bar = ProgressBar(
+            max=100,
+            value=0,
+            size_hint_y=None,
+            height='20dp'
+        )
+        root.add_widget(self.progress_bar)
+        
+        # Status Label
+        self.status_label = Label(
+            text="Ready to download",
+            font_size='14sp',
+            color=(0.6, 0.7, 0.8, 1),
+            size_hint_y=None,
+            height='30dp'
         )
         root.add_widget(self.status_label)
         
@@ -103,9 +128,26 @@ class DownloaderApp(App):
             return
             
         self.btn_download.disabled = True
+        self.progress_bar.value = 0
+        self.percent_label.text = "0%"
         self.status_label.color = (0.95, 0.75, 0.25, 1)
-        self.status_label.text = "Downloading... Please wait"
+        self.status_label.text = "Starting download..."
         threading.Thread(target=self._download_worker, args=(url,)).start()
+
+    def _progress_hook(self, d):
+        if d['status'] == 'downloading':
+            total = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
+            downloaded = d.get('downloaded_bytes') or 0
+            if total > 0:
+                percent = int((downloaded / total) * 100)
+                Clock.schedule_once(lambda dt: self._update_percent(percent, "Downloading..."))
+        elif d['status'] == 'finished':
+            Clock.schedule_once(lambda dt: self._update_percent(100, "Saving to gallery..."))
+
+    def _update_percent(self, percent, msg):
+        self.progress_bar.value = percent
+        self.percent_label.text = f"{percent}%"
+        self.status_label.text = msg
 
     def _download_worker(self, url):
         download_dir = "/storage/emulated/0/Download"
@@ -116,6 +158,7 @@ class DownloaderApp(App):
             "format": "best",
             "windowsfilenames": True,
             "ignoreerrors": True,
+            "progress_hooks": [self._progress_hook],
             "http_headers": {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             }
@@ -125,11 +168,11 @@ class DownloaderApp(App):
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
             os.system(f"am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d 'file://{download_dir}' > /dev/null 2>&1")
-            Clock.schedule_once(lambda dt: self._update_status("Download Complete! Check Gallery.", True, (0.3, 0.9, 0.4, 1)))
+            Clock.schedule_once(lambda dt: self._finish_download("Download Complete! Check Gallery.", True, (0.3, 0.9, 0.4, 1)))
         except Exception as e:
-            Clock.schedule_once(lambda dt: self._update_status("Download Failed! Try another link.", True, (1, 0.3, 0.3, 1)))
+            Clock.schedule_once(lambda dt: self._finish_download("Download Failed! Try another link.", True, (1, 0.3, 0.3, 1)))
 
-    def _update_status(self, message, enable_btn, color):
+    def _finish_download(self, message, enable_btn, color):
         self.status_label.text = message
         self.status_label.color = color
         self.btn_download.disabled = not enable_btn
