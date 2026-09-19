@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Fast Android Build
 
 on:
   push:
@@ -12,6 +12,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # រក្សាទុក Android SDK & NDK ក្នុង Cache ដើម្បីឱ្យ Build លើកក្រោយលឿនដូចផ្លេកបន្ទោរ
+      - name: Cache Buildozer and Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.buildozer
+            .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,12 +42,12 @@ jobs:
           pip install --upgrade pip
           pip install "cython<3.0.0" buildozer
 
-      - name: Build with Buildozer
+      - name: Fast Build
         run: |
           yes | buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FB-Downloader-APK
+          name: Video-Saver-Official-APK
           path: bin/*.apk
