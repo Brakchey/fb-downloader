@@ -1,14 +1,14 @@
 [app]
-title = FB Downloader
-package.name = fbdownloader
-package.domain = org.brakchey
+title = Video Saver
+package.name = videosaver
+package.domain = com.brakchey
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
-version = 0.1
+version = 1.0.0
 requirements = python3,kivy,yt-dlp,urllib3,certifi,chardet,idna
 orientation = portrait
 fullscreen = 0
-android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
 android.ndk = 25b
